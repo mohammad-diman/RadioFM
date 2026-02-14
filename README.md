@@ -45,4 +45,4 @@ The app interacts with the Radio Garden API to fetch station data. It uses a `Pl
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-Built with ❤️ by [Mohammad Diman](https://github.com/mohammad-diman)
+Built by [Mohammad Diman](https://github.com/mohammad-diman)
