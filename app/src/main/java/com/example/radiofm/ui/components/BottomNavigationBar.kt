@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,16 +34,15 @@ fun CustomBottomNavigation(
     currentTab: String,
     onTabSelected: (String) -> Unit
 ) {
-    // Floating Pill Container
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 4.dp)
             .height(72.dp)
-            .shadow(16.dp, CircleShape) // Added strong shadow
+            .shadow(16.dp, CircleShape)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.background) // Use app background color
-            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape), // Stronger border
+            .background(MaterialTheme.colorScheme.background)
+            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Row(
