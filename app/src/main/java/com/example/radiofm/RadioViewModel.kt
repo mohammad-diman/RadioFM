@@ -13,6 +13,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.radiofm.data.RadioApi
 import com.example.radiofm.data.RadioStation
+import com.example.radiofm.data.DataStoreManager
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,8 @@ import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Timer
+import kotlin.concurrent.schedule
 
 class RadioViewModel : ViewModel() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -29,6 +32,21 @@ class RadioViewModel : ViewModel() {
         get() = if (controllerFuture?.isDone == true) {
             try { controllerFuture?.get() } catch (e: Exception) { null }
         } else null
+
+    private lateinit var dataStoreManager: DataStoreManager
+    
+    private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
+    val favoriteIds = _favoriteIds.asStateFlow()
+
+    private val _favoriteStations = MutableStateFlow<List<RadioStation>>(emptyList())
+    val favoriteStations = _favoriteStations.asStateFlow()
+
+    private val _historyIds = MutableStateFlow<List<String>>(emptyList())
+    val historyIds = _historyIds.asStateFlow()
+
+    private val _sleepTimerMillis = MutableStateFlow<Long?>(null)
+    val sleepTimerMillis = _sleepTimerMillis.asStateFlow()
+    private var sleepTimerTask: Timer? = null
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying = _isPlaying.asStateFlow()
@@ -44,6 +62,8 @@ class RadioViewModel : ViewModel() {
 
     private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
     val stations = _stations.asStateFlow()
+
+    private val stationCache = mutableMapOf<String, RadioStation>()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -73,6 +93,24 @@ class RadioViewModel : ViewModel() {
     fun initPlayer(context: Context) {
         if (controllerFuture != null) return
         
+        dataStoreManager = DataStoreManager(context)
+        
+        // Collect DataStore flows
+        viewModelScope.launch {
+            dataStoreManager.favoritesFlow.collect { ids ->
+                _favoriteIds.value = ids
+                syncFavoriteStations(ids)
+            }
+        }
+        viewModelScope.launch {
+            dataStoreManager.historyFlow.collect {
+                _historyIds.value = it
+            }
+        }
+
+        // Pre-fill cache
+        stations.value.forEach { stationCache[it.id] = it }
+
         try {
             val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
             controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
@@ -81,6 +119,69 @@ class RadioViewModel : ViewModel() {
             }, MoreExecutors.directExecutor())
         } catch (e: Exception) {
             Log.e("RadioVM", "Gagal inisialisasi: ${e.message}")
+        }
+    }
+
+    private suspend fun syncFavoriteStations(ids: Set<String>) {
+        val currentFavorites = _favoriteStations.value.toMutableList()
+        
+        // Remove ones no longer in IDs
+        currentFavorites.removeAll { !ids.contains(it.id) }
+        
+        // Add new ones
+        ids.forEach { id ->
+            if (currentFavorites.none { it.id == id }) {
+                val cached = stationCache[id]
+                if (cached != null) {
+                    currentFavorites.add(cached)
+                } else {
+                    // Fetch from API if not in cache
+                    try {
+                        val response = api.getChannelInfo(id)
+                        val station = RadioStation(
+                            id = id,
+                            name = response.data.title,
+                            streamUrl = "${RadioApi.STREAM_BASE_URL}$id/channel.mp3",
+                            imageUrl = "https://radio.garden/api/ara/content/channel/$id/image",
+                            description = response.data.place.title
+                        )
+                        stationCache[id] = station
+                        currentFavorites.add(station)
+                    } catch (e: Exception) {
+                        Log.e("RadioVM", "Error fetching favorite $id", e)
+                    }
+                }
+            }
+        }
+        _favoriteStations.value = currentFavorites.toList()
+    }
+
+    fun getStationById(id: String): RadioStation? = stationCache[id]
+
+    fun toggleFavorite(stationId: String) {
+        viewModelScope.launch {
+            dataStoreManager.toggleFavorite(stationId)
+        }
+    }
+
+    fun setSleepTimer(minutes: Int?) {
+        sleepTimerTask?.cancel()
+        sleepTimerTask = null
+        
+        if (minutes == null) {
+            _sleepTimerMillis.value = null
+            return
+        }
+
+        val millis = minutes * 60 * 1000L
+        _sleepTimerMillis.value = System.currentTimeMillis() + millis
+        
+        sleepTimerTask = Timer()
+        sleepTimerTask?.schedule(millis) {
+            viewModelScope.launch {
+                controller?.pause()
+                _sleepTimerMillis.value = null
+            }
         }
     }
 
@@ -118,8 +219,6 @@ class RadioViewModel : ViewModel() {
                     api.searchStations(searchQuery)
                 }
 
-                Log.d("RadioVM", "Fetched ${response.hits.hits.size} hits for $searchQuery")
-
                 val mappedStations = response.hits.hits
                     .mapNotNull { hit ->
                         val source = hit._source ?: return@mapNotNull null
@@ -134,13 +233,12 @@ class RadioViewModel : ViewModel() {
                                 streamUrl = "${RadioApi.STREAM_BASE_URL}$id/channel.mp3",
                                 imageUrl = "https://radio.garden/api/ara/content/channel/$id/image",
                                 description = "Radio Garden"
-                            )
+                            ).also { stationCache[it.id] = it }
                         } else {
                             null
                         }
                     }
                 
-                Log.d("RadioVM", "Mapped ${mappedStations.size} channels")
                 _stations.value = mappedStations
             } catch (e: Exception) {
                 Log.e("RadioVM", "Error fetching from Radio Garden", e)
@@ -153,6 +251,12 @@ class RadioViewModel : ViewModel() {
 
     fun playStation(station: RadioStation) {
         val player = controller ?: return
+        
+        // Add to history using DataStore
+        viewModelScope.launch {
+            dataStoreManager.addToHistory(station.id)
+        }
+
         try {
             _currentStation.value = station
             _isBuffering.value = true

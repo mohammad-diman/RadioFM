@@ -29,7 +29,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.radiofm.R
 import com.example.radiofm.RadioViewModel
 import com.example.radiofm.ui.theme.AccentBlue
@@ -44,8 +46,38 @@ fun PlayerScreen(
     val currentStation by viewModel.currentStation.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
+    val sleepTimerMillis by viewModel.sleepTimerMillis.collectAsState()
+
+    var showTimerDialog by remember { mutableStateOf(false) }
 
     if (currentStation == null) return
+    val isFavorite = favoriteIds.contains(currentStation!!.id)
+
+    if (showTimerDialog) {
+        AlertDialog(
+            onDismissRequest = { showTimerDialog = false },
+            title = { Text("Sleep Timer") },
+            text = {
+                Column {
+                    listOf(15, 30, 60, 0).forEach { mins ->
+                        TextButton(
+                            onClick = {
+                                viewModel.setSleepTimer(if (mins == 0) null else mins)
+                                showTimerDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (mins == 0) "Matikan Timer" else "$mins Menit")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showTimerDialog = false }) { Text("Batal") }
+            }
+        )
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "animations")
     
@@ -74,7 +106,10 @@ fun PlayerScreen(
     ) {
         // BACKGROUND: Dynamic Glassmorphism
         AsyncImage(
-            model = currentStation!!.imageUrl,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(currentStation!!.imageUrl)
+                .crossfade(true)
+                .build(),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
@@ -141,8 +176,12 @@ fun PlayerScreen(
                     )
                 }
                 
-                IconButton(onClick = {}, modifier = Modifier.size(42.dp)) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White)
+                IconButton(onClick = { showTimerDialog = true }, modifier = Modifier.size(42.dp)) {
+                    Icon(
+                        Icons.Default.Timer, 
+                        contentDescription = "Sleep Timer", 
+                        tint = if (sleepTimerMillis != null) MaterialTheme.colorScheme.primary else Color.White
+                    )
                 }
             }
 
@@ -216,7 +255,10 @@ fun PlayerScreen(
                         ) {
                             Row(modifier = Modifier.fillMaxSize()) {
                                 AsyncImage(
-                                    model = currentStation!!.imageUrl,
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(currentStation!!.imageUrl)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = null,
                                     modifier = Modifier.fillMaxHeight().width(110.dp),
                                     contentScale = ContentScale.Crop
@@ -379,10 +421,14 @@ fun PlayerScreen(
                 }
 
                 IconButton(
-                    onClick = {}, 
+                    onClick = { viewModel.toggleFavorite(currentStation!!.id) }, 
                     modifier = Modifier.size(54.dp).background(Color.White.copy(alpha = 0.05f), CircleShape)
                 ) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.White.copy(alpha = 0.8f))
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
+                        contentDescription = null, 
+                        tint = if (isFavorite) Color.Red else Color.White.copy(alpha = 0.8f)
+                    )
                 }
             }
             
