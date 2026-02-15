@@ -2,9 +2,11 @@ package com.example.radiofm.ui
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,28 +16,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.radiofm.R
 import com.example.radiofm.RadioViewModel
-import com.example.radiofm.ui.theme.AccentBlue
-import androidx.compose.foundation.ExperimentalFoundationApi
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -48,6 +48,7 @@ fun PlayerScreen(
     val isBuffering by viewModel.isBuffering.collectAsState()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
     val sleepTimerMillis by viewModel.sleepTimerMillis.collectAsState()
+    val nowPlaying by viewModel.nowPlaying.collectAsState()
 
     var showTimerDialog by remember { mutableStateOf(false) }
 
@@ -104,7 +105,7 @@ fun PlayerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // BACKGROUND: Dynamic Glassmorphism
+        // BACKGROUND BLUR
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(currentStation!!.imageUrl)
@@ -187,102 +188,124 @@ fun PlayerScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // THE CASSETTE (Polished)
+            // PREMIUM CASSETTE TAPE
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
                     .graphicsLayer {
-                        rotationX = -5f // Slight 3D tilt
+                        rotationX = -8f 
+                        cameraDistance = 12f
                     }
             ) {
-                // Neon Glow behind cassette
+                // Neon Glow Background
                 if (isPlaying) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .height(200.dp)
-                            .blur(40.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha * 0.3f), RoundedCornerShape(20.dp))
+                            .fillMaxWidth(0.85f)
+                            .height(180.dp)
+                            .blur(50.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha * 0.25f), RoundedCornerShape(30.dp))
                     )
                 }
 
-                // Main Body
+                // Cassette Main Body
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFF1A1A1A),
-                    border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.08f)),
-                    shadowElevation = 20.dp
+                        .height(225.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xFF121212),
+                    border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.1f)),
+                    shadowElevation = 24.dp
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Texture Overlay (subtle)
+                        // Grain Texture & Reflection Overlay
                         Box(modifier = Modifier.fillMaxSize().background(
-                            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent, Color.Black.copy(alpha = 0.2f)))
+                            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.03f), Color.Transparent, Color.Black.copy(alpha = 0.3f)))
                         ))
-
-                        // Corner Screws
-                        repeat(4) { i ->
-                            val alignment = when(i) {
-                                0 -> Alignment.TopStart
-                                1 -> Alignment.TopEnd
-                                2 -> Alignment.BottomStart
-                                else -> Alignment.BottomEnd
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(8.dp)
-                                    .align(alignment)
-                                    .background(Color(0xFF333333), CircleShape)
-                                    .border(1.dp, Color.Black, CircleShape)
-                            )
+                        
+                        // Small mechanical holes
+                        Row(
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(40.dp)
+                        ) {
+                            repeat(3) { Box(modifier = Modifier.size(10.dp).background(Color.Black, CircleShape)) }
                         }
 
-                        // Artwork Label
+                        // Sticker Label
                         Surface(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(0.88f)
-                                .fillMaxHeight(0.75f)
-                                .padding(top = 10.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFF2D2D2D),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                                .align(Alignment.TopCenter)
+                                .fillMaxWidth(0.92f)
+                                .fillMaxHeight(0.78f)
+                                .padding(top = 12.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFF222222),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
                         ) {
                             Row(modifier = Modifier.fillMaxSize()) {
+                                // Artwork Label
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(currentStation!!.imageUrl)
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = null,
-                                    modifier = Modifier.fillMaxHeight().width(110.dp),
+                                    modifier = Modifier.fillMaxHeight().width(115.dp).clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)),
                                     contentScale = ContentScale.Crop
                                 )
                                 
-                                Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
-                                    Text(
-                                        "SIDE A - HI-FI STEREO",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                // Text Info on Label
+                                Box(modifier = Modifier.fillMaxSize().background(
+                                    Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.2f), Color.Transparent))
+                                ).padding(12.dp)) {
+                                    Column {
+                                        Text(
+                                            "TAPE SIDE A",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Black),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Surface(
+                                            color = Color.Black.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(4.dp),
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = nowPlaying ?: currentStation!!.name,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 11.sp, 
+                                                    fontWeight = FontWeight.Black,
+                                                    letterSpacing = 0.5.sp
+                                                ),
+                                                color = Color.White,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            "MAXELL HI-FI 90",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp),
+                                            color = Color.White.copy(alpha = 0.3f)
+                                        )
+                                    }
                                     
-                                    // Tape Window
+                                    // The Tape Window
                                     Box(
                                         modifier = Modifier
-                                            .align(Alignment.Center)
+                                            .align(Alignment.BottomCenter)
                                             .fillMaxWidth()
-                                            .height(64.dp)
-                                            .clip(RoundedCornerShape(32.dp))
-                                            .background(Color.Black.copy(alpha = 0.8f))
-                                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(32.dp)),
+                                            .height(68.dp)
+                                            .padding(bottom = 4.dp)
+                                            .clip(RoundedCornerShape(34.dp))
+                                            .background(Color.Black.copy(alpha = 0.85f))
+                                            .border(1.2.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(34.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        // The rotating reels
+                                        // Reels
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -291,25 +314,27 @@ fun PlayerScreen(
                                             repeat(2) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(52.dp)
+                                                        .size(54.dp)
                                                         .graphicsLayer { rotationZ = if (isPlaying) rotation else 0f },
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(id = R.drawable.ic_cassette_reel),
                                                         contentDescription = null,
-                                                        modifier = Modifier.size(50.dp),
+                                                        modifier = Modifier.size(52.dp),
                                                         tint = Color.Unspecified
                                                     )
                                                 }
                                             }
                                         }
-                                        // Glass Reflection
+                                        
+                                        // Glass Shine
                                         Box(modifier = Modifier.fillMaxSize().background(
                                             Brush.linearGradient(
-                                                0f to Color.White.copy(alpha = 0.05f),
-                                                0.5f to Color.Transparent,
-                                                1f to Color.White.copy(alpha = 0.05f)
+                                                0f to Color.White.copy(alpha = 0.08f),
+                                                0.4f to Color.Transparent,
+                                                0.6f to Color.Transparent,
+                                                1f to Color.White.copy(alpha = 0.08f)
                                             )
                                         ))
                                     }
@@ -322,53 +347,52 @@ fun PlayerScreen(
 
             Spacer(modifier = Modifier.weight(0.5f))
 
-            // INFO SECTION
+            // INFO SECTION (Title & Status)
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Marquee/Dynamic Title
                 Text(
-                    text = currentStation!!.name,
+                    text = nowPlaying ?: currentStation!!.name,
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Black,
                         letterSpacing = (-1).sp
                     ),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .basicMarquee(),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).basicMarquee(),
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Digital Display Indicator
                 Surface(
-                    color = Color.Black.copy(alpha = 0.4f),
+                    color = Color.Black.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, if (isPlaying) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f))
+                    border = BorderStroke(1.dp, if (isPlaying) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(6.dp)
+                                .size(7.dp)
                                 .background(if (isPlaying) Color(0xFF00FF00) else Color.Gray, CircleShape)
-                                .let { if(isPlaying) it.blur(2.dp) else it }
+                                .drawBehind {
+                                    if(isPlaying) {
+                                        drawCircle(Color(0xFF00FF00), radius = size.minDimension * 1.5f, alpha = 0.3f)
+                                    }
+                                }
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = if (isPlaying) "RADIO ONLINE" else "RADIO OFFLINE",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp,
+                                letterSpacing = 1.5.sp,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             ),
-                            color = if (isPlaying) Color(0xFF00FF00).copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.6f)
+                            color = if (isPlaying) Color(0xFF00FF00).copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -376,7 +400,7 @@ fun PlayerScreen(
 
             Spacer(modifier = Modifier.weight(0.8f))
 
-            // CONTROLS (PREMIUM LOOK)
+            // MAIN CONTROLS
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -384,33 +408,33 @@ fun PlayerScreen(
             ) {
                 IconButton(
                     onClick = {}, 
-                    modifier = Modifier.size(54.dp).background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.06f), CircleShape)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null, tint = Color.White.copy(alpha = 0.8f))
+                    Icon(Icons.Default.Share, contentDescription = null, tint = Color.White.copy(alpha = 0.9f))
                 }
 
                 if (isBuffering) {
-                    Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.size(105.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.primary,
                             strokeWidth = 3.dp,
-                            modifier = Modifier.size(64.dp)
+                            modifier = Modifier.size(68.dp)
                         )
                     }
                 } else {
                     Surface(
                         onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(100.dp),
+                        modifier = Modifier.size(105.dp),
                         shape = CircleShape,
                         color = Color.White,
-                        tonalElevation = 8.dp,
-                        shadowElevation = 16.dp
+                        tonalElevation = 12.dp,
+                        shadowElevation = 20.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = null,
-                                modifier = Modifier.size(52.dp),
+                                modifier = Modifier.size(56.dp),
                                 tint = Color.Black
                             )
                         }
@@ -419,12 +443,12 @@ fun PlayerScreen(
 
                 IconButton(
                     onClick = { viewModel.toggleFavorite(currentStation!!.id) }, 
-                    modifier = Modifier.size(54.dp).background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.06f), CircleShape)
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
                         contentDescription = null, 
-                        tint = if (isFavorite) Color.Red else Color.White.copy(alpha = 0.8f)
+                        tint = if (isFavorite) Color(0xFFFF4081) else Color.White.copy(alpha = 0.9f)
                     )
                 }
             }

@@ -60,6 +60,9 @@ class RadioViewModel : ViewModel() {
     private val _currentStation = MutableStateFlow<RadioStation?>(null)
     val currentStation = _currentStation.asStateFlow()
 
+    private val _nowPlaying = MutableStateFlow<String?>(null)
+    val nowPlaying = _nowPlaying.asStateFlow()
+
     private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
     val stations = _stations.asStateFlow()
 
@@ -222,6 +225,17 @@ class RadioViewModel : ViewModel() {
     private fun setupController() {
         val player = controller ?: return
         player.addListener(object : Player.Listener {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                val title = mediaMetadata.title
+                val artist = mediaMetadata.artist
+                
+                if (!title.isNullOrEmpty()) {
+                    _nowPlaying.value = if (!artist.isNullOrEmpty()) "$artist - $title" else title.toString()
+                } else {
+                    _nowPlaying.value = null
+                }
+            }
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 _isPlaying.value = isPlaying
                 if (isPlaying) {
@@ -296,6 +310,7 @@ class RadioViewModel : ViewModel() {
 
     fun playStation(station: RadioStation) {
         val player = controller ?: return
+        _nowPlaying.value = null // Reset metadata for new station
         
         // Add to history using DataStore
         viewModelScope.launch {
@@ -329,10 +344,15 @@ class RadioViewModel : ViewModel() {
 
     fun togglePlayPause() {
         val player = controller ?: return
-        if (player.isPlaying) {
-            player.pause()
+        if (player.mediaItemCount == 0 && _currentStation.value != null) {
+            // Player is empty but we have a restored station, start it
+            playStation(_currentStation.value!!)
         } else {
-            player.play()
+            if (player.isPlaying) {
+                player.pause()
+            } else {
+                player.play()
+            }
         }
     }
 

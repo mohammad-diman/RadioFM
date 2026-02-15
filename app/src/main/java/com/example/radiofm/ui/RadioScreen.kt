@@ -71,7 +71,7 @@ fun RadioScreen(
         val g = when (hour) {
             in 5..10 -> "Selamat Pagi," to "Awali harimu dengan musik favorit."
             in 11..14 -> "Selamat Siang," to "Tetap semangat ditemani siaran terbaik."
-            in 15..18 -> "Selamat Sore," to "Santai sejenak sebelum pulang."
+            in 15..17 -> "Selamat Sore," to "Santai sejenak sebelum pulang."
             else -> "Selamat Malam," to "Waktunya istirahat dengan melodi tenang."
         }
         g
