@@ -20,14 +20,15 @@ import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = AccentBlue,
-    secondary = GrayText,
+    secondary = AccentPurple,
+    tertiary = AccentTeal,
     background = BgDark,
     surface = SurfaceDark,
-    onPrimary = BgDark,
-    onSecondary = PureWhite,
+    surfaceVariant = SurfaceLight,
+    onPrimary = PureWhite,
+    onSecondary = BgDark,
     onBackground = OffWhite,
     onSurface = PureWhite,
-    surfaceVariant = SurfaceDark.copy(alpha = 0.7f),
     error = ErrorRed
 )
 
@@ -44,6 +45,7 @@ fun RadioFMTheme(content: @Composable () -> Unit) {
 
     MaterialTheme(
         colorScheme = DarkColorScheme,
+        typography = Typography,
         content = content
     )
 }

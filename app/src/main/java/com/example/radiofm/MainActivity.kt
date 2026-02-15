@@ -21,7 +21,13 @@ import com.example.radiofm.ui.PlayerScreen
 import com.example.radiofm.ui.RadioScreen
 import com.example.radiofm.ui.theme.RadioFMTheme
 
-class   MainActivity : ComponentActivity() {
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+
+class MainActivity : ComponentActivity() {
     private val viewModel: RadioViewModel by viewModels()
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -42,17 +48,41 @@ class   MainActivity : ComponentActivity() {
                 ) {
                     var showPlayer by remember { mutableStateOf(false) }
 
-                    if (showPlayer) {
-                        PlayerScreen(
-                            viewModel = viewModel,
-                            onBack = { showPlayer = false }
-                        )
-                        BackHandler { showPlayer = false }
-                    } else {
-                        RadioScreen(
-                            viewModel = viewModel,
-                            onPlayerClick = { showPlayer = true }
-                        )
+                    AnimatedContent(
+                        targetState = showPlayer,
+                        label = "PlayerTransition",
+                        transitionSpec = {
+                            if (targetState) {
+                                slideInVertically(
+                                    initialOffsetY = { it },
+                                    animationSpec = tween(400)
+                                ) togetherWith slideOutVertically(
+                                    targetOffsetY = { -it / 3 }, // Parallax effect
+                                    animationSpec = tween(400)
+                                )
+                            } else {
+                                slideInVertically(
+                                    initialOffsetY = { -it / 3 },
+                                    animationSpec = tween(400)
+                                ) togetherWith slideOutVertically(
+                                    targetOffsetY = { it },
+                                    animationSpec = tween(400)
+                                )
+                            }
+                        }
+                    ) { isPlayerVisible ->
+                        if (isPlayerVisible) {
+                            PlayerScreen(
+                                viewModel = viewModel,
+                                onBack = { showPlayer = false }
+                            )
+                            BackHandler { showPlayer = false }
+                        } else {
+                            RadioScreen(
+                                viewModel = viewModel,
+                                onPlayerClick = { showPlayer = true }
+                            )
+                        }
                     }
                 }
             }
