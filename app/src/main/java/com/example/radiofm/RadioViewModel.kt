@@ -63,10 +63,15 @@ class RadioViewModel : ViewModel() {
     private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
     val stations = _stations.asStateFlow()
 
+    private val _featuredStations = MutableStateFlow<List<RadioStation>>(emptyList())
+    val featuredStations = _featuredStations.asStateFlow()
+
     private val stationCache = mutableMapOf<String, RadioStation>()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
+
+    private var lastQuery = ""
 
     private val api: RadioApi by lazy {
         val client = OkHttpClient.Builder()
@@ -210,6 +215,7 @@ class RadioViewModel : ViewModel() {
     }
 
     fun fetchStations(query: String) {
+        lastQuery = query
         viewModelScope.launch {
             _isLoading.value = true
             _lastError.value = null
@@ -240,6 +246,10 @@ class RadioViewModel : ViewModel() {
                     }
                 
                 _stations.value = mappedStations
+                
+                if (_featuredStations.value.isEmpty() || query.isEmpty()) {
+                    _featuredStations.value = mappedStations.shuffled().take(8)
+                }
             } catch (e: Exception) {
                 Log.e("RadioVM", "Error fetching from Radio Garden", e)
                 _lastError.value = "Gagal memuat: ${e.localizedMessage ?: "Cek koneksi"}"
@@ -247,6 +257,10 @@ class RadioViewModel : ViewModel() {
                 _isLoading.value = false
             }
         }
+    }
+
+    fun refresh() {
+        fetchStations(lastQuery)
     }
 
     fun playStation(station: RadioStation) {

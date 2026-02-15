@@ -339,10 +339,7 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            delayMillis = 2000
-                        ),
+                        .basicMarquee(),
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.height(16.dp))
