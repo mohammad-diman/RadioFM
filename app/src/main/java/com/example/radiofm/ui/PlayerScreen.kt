@@ -168,7 +168,7 @@ fun PlayerScreen(
                         )
                     )
                     Text(
-                        "RADIO INDONESIA",
+                        "RADIO GARDEN",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Color.White
@@ -357,18 +357,18 @@ fun PlayerScreen(
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
-                                .background(if (isPlaying) Color(0xFF00FF00) else Color.Red, CircleShape)
+                                .background(if (isPlaying) Color(0xFF00FF00) else Color.Gray, CircleShape)
                                 .let { if(isPlaying) it.blur(2.dp) else it }
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = if (isPlaying) "STEREO ONLINE" else "SIGNAL LOST",
+                            text = if (isPlaying) "RADIO ONLINE" else "RADIO OFFLINE",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             ),
-                            color = if (isPlaying) Color(0xFF00FF00).copy(alpha = 0.8f) else Color.Red.copy(alpha = 0.6f)
+                            color = if (isPlaying) Color(0xFF00FF00).copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.6f)
                         )
                     }
                 }

@@ -112,6 +112,13 @@ class RadioViewModel : ViewModel() {
                 _historyIds.value = it
             }
         }
+        viewModelScope.launch {
+            dataStoreManager.lastStationFlow.collect { id ->
+                if (id != null && _currentStation.value == null) {
+                    restoreLastStation(id)
+                }
+            }
+        }
 
         // Pre-fill cache
         stations.value.forEach { stationCache[it.id] = it }
@@ -124,6 +131,28 @@ class RadioViewModel : ViewModel() {
             }, MoreExecutors.directExecutor())
         } catch (e: Exception) {
             Log.e("RadioVM", "Gagal inisialisasi: ${e.message}")
+        }
+    }
+
+    private suspend fun restoreLastStation(id: String) {
+        val cached = stationCache[id]
+        if (cached != null) {
+            _currentStation.value = cached
+        } else {
+            try {
+                val response = api.getChannelInfo(id)
+                val station = RadioStation(
+                    id = id,
+                    name = response.data.title,
+                    streamUrl = "${RadioApi.STREAM_BASE_URL}$id/channel.mp3",
+                    imageUrl = "https://radio.garden/api/ara/content/channel/$id/image",
+                    description = response.data.place.title
+                )
+                stationCache[id] = station
+                _currentStation.value = station
+            } catch (e: Exception) {
+                Log.e("RadioVM", "Gagal mengembalikan stasiun terakhir: $id", e)
+            }
         }
     }
 
@@ -230,14 +259,16 @@ class RadioViewModel : ViewModel() {
                         val source = hit._source ?: return@mapNotNull null
                         val page = source.page ?: return@mapNotNull null
                         val url = page.url ?: return@mapNotNull null
-                        val id = url.split("/").last()
+                        
+                        // Use hit._id if available, otherwise fallback to URL split
+                        val id = hit._id ?: url.split("/").last()
                         
                         if (page.type == "channel") {
                             RadioStation(
                                 id = id,
                                 name = page.title ?: "Unknown",
                                 streamUrl = "${RadioApi.STREAM_BASE_URL}$id/channel.mp3",
-                                imageUrl = "https://radio.garden/api/ara/content/channel/$id/image",
+                                imageUrl = "https://radio.garden/api/ara/content/channel/$id/image.png", // Added .png extension
                                 description = "Radio Garden"
                             ).also { stationCache[it.id] = it }
                         } else {

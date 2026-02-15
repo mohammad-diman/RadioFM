@@ -36,10 +36,10 @@ fun BottomPlayerBar(
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .height(76.dp)
-            .shadow(12.dp, RoundedCornerShape(24.dp))
+            .shadow(16.dp, RoundedCornerShape(24.dp))
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {

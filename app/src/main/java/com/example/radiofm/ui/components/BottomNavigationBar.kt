@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -36,11 +37,12 @@ fun CustomBottomNavigation(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .padding(horizontal = 24.dp, vertical = 4.dp)
             .height(72.dp)
+            .shadow(16.dp, CircleShape) // Added strong shadow
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.1f), CircleShape),
+            .background(MaterialTheme.colorScheme.background) // Use app background color
+            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape), // Stronger border
         contentAlignment = Alignment.Center
     ) {
         Row(

@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .navigationBarsPadding()
-                                                .padding(bottom = 8.dp), // Lowered from 16.dp
+                                                .padding(bottom = 2.dp), // Reduced from 8.dp
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             // 1. MINI PLAYER FLOATING
@@ -108,11 +108,11 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                     }
-                                ) { padding ->
+                                ) { _ ->
                                     RadioScreen(
                                         viewModel = viewModel,
                                         currentTab = currentTab,
-                                        modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
+                                        modifier = Modifier.fillMaxSize(),
                                         onPlayerClick = { showPlayer = true }
                                     )
                                 }

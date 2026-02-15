@@ -13,6 +13,7 @@ class DataStoreManager(private val context: Context) {
 
     private val FAVORITES_KEY = stringSetPreferencesKey("favorites")
     private val HISTORY_KEY = stringPreferencesKey("history")
+    private val LAST_STATION_KEY = stringPreferencesKey("last_station")
 
     val favoritesFlow: Flow<Set<String>> = context.dataStore.data
         .map { preferences ->
@@ -22,6 +23,11 @@ class DataStoreManager(private val context: Context) {
     val historyFlow: Flow<List<String>> = context.dataStore.data
         .map { preferences ->
             preferences[HISTORY_KEY]?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+        }
+
+    val lastStationFlow: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[LAST_STATION_KEY]
         }
 
     suspend fun toggleFavorite(stationId: String) {
@@ -43,6 +49,7 @@ class DataStoreManager(private val context: Context) {
             current.add(0, stationId)
             val limited = current.take(20)
             preferences[HISTORY_KEY] = limited.joinToString(",")
+            preferences[LAST_STATION_KEY] = stationId
         }
     }
 }
