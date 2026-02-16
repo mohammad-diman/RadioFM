@@ -10,10 +10,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Radio
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,10 +56,10 @@ fun CustomBottomNavigation(
                 onClick = { onTabSelected("Beranda") }
             )
             BottomNavItem(
-                label = "Favorit",
-                icon = Icons.Default.Favorite,
-                isSelected = currentTab == "Favorit",
-                onClick = { onTabSelected("Favorit") }
+                label = "Bookmark",
+                icon = Icons.Default.Bookmark,
+                isSelected = currentTab == "Bookmark",
+                onClick = { onTabSelected("Bookmark") }
             )
             BottomNavItem(
                 label = "Stasiun",

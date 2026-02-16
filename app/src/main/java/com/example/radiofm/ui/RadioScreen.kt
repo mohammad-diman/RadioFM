@@ -87,7 +87,6 @@ fun RadioScreen(
         ).random()
     }
 
-    // Correct PullToRefresh API for Material 3 1.2.x
     val pullToRefreshState = rememberPullToRefreshState()
     
     if (pullToRefreshState.isRefreshing) {
@@ -116,7 +115,7 @@ fun RadioScreen(
                 Column {
                     val titleText = when(currentTab) {
                         "Beranda" -> greeting
-                        "Favorit" -> "Favorit Anda"
+                        "Bookmark" -> "Simpanan Anda"
                         else -> "Stasiun Radio"
                     }
                     val subText = if (currentTab == "Beranda") dynamicSubtitle else ""
@@ -195,7 +194,7 @@ fun RadioScreen(
                             )
                         }
 
-                        val filteredStations = if (targetTab == "Favorit") {
+                        val filteredStations = if (targetTab == "Bookmark") {
                             favoriteStations
                         } else {
                             stations
@@ -209,9 +208,9 @@ fun RadioScreen(
                                 item {
                                     Box(Modifier.fillParentMaxSize().padding(bottom = 100.dp), Alignment.Center) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(if (targetTab == "Favorit") "Belum ada favorit" else "Tidak ditemukan")
-                                            if (targetTab == "Favorit") {
-                                                Text("Sukai stasiun untuk muncul di sini", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                            Text(if (targetTab == "Bookmark") "Belum ada bookmark" else "Tidak ditemukan")
+                                            if (targetTab == "Bookmark") {
+                                                Text("Tandai stasiun untuk muncul di sini", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                                             }
                                         }
                                     }

@@ -100,6 +100,13 @@ fun PlayerScreen(
         ), label = "glowAlpha"
     )
 
+    val bassIntensity = if (isPlaying) 0.5f else 0f // Static pulse since visualizer is removed
+    val pulseScale by animateFloatAsState(
+        targetValue = 1f + (bassIntensity * 0.05f),
+        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow),
+        label = "pulse"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -194,6 +201,7 @@ fun PlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
+                    .scale(pulseScale)
                     .graphicsLayer {
                         rotationX = -8f 
                         cameraDistance = 12f
@@ -446,9 +454,9 @@ fun PlayerScreen(
                     modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.06f), CircleShape)
                 ) {
                     Icon(
-                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
-                        contentDescription = null, 
-                        tint = if (isFavorite) Color(0xFFFF4081) else Color.White.copy(alpha = 0.9f)
+                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder, 
+                        contentDescription = "Bookmark", 
+                        tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.9f)
                     )
                 }
             }
